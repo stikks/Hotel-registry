@@ -3,5 +3,6 @@ flask-restful
 flask-marshmallow
 flask-swagger
 flask-login
+flask-wtf
 requests
 google-api-python-client
