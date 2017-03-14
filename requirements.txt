@@ -1,0 +1,7 @@
+flask
+flask-restful
+flask-marshmallow
+flask-swagger
+flask-login
+requests
+google-api-python-client
