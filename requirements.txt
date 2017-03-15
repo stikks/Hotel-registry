@@ -4,5 +4,6 @@ flask-marshmallow
 flask-swagger
 flask-login
 flask-wtf
+flask-httpauth
 requests
 google-api-python-client
