@@ -3,11 +3,11 @@ import hashlib, json
 from flask import g, request, make_response
 from flask_restful import Resource, abort, fields, marshal
 from flask_httpauth import HTTPBasicAuth
-from werkzeug.exceptions import HTTPException, HTTP_STATUS_CODES
 from google.appengine.ext import ndb
 
 from models import User, Booking, Room, Customer
-from forms import LoginForm, RegistrationForm, BookingForm, RoomForm, CustomerForm, UpdateForm
+from forms import LoginForm, RegistrationForm, BookingForm, RoomForm, CustomerForm, UpdateForm, UpdateBookingForm
+from services import is_json, CustomException
 
 auth = HTTPBasicAuth()
 admin_auth = HTTPBasicAuth()
@@ -18,7 +18,11 @@ def verify_password(username, password):
     user = User.query(User.username == username).get()
 
     if not user or not user.check_password(password):
-        return False
+        try:
+            if g.user:
+                return True
+        except:
+            return False
     g.user = user
     return True
 
@@ -31,37 +35,6 @@ def verify_admin(username, password):
         return False
     g.user = user
     return True
-
-
-class CustomException(HTTPException):
-    def __init__(self, code, data, description=None, name=None):
-        """
-        custom model for handling HTTPExceptions
-        :param code: Response Code
-        :param description: Description of error
-        """
-        self.code = code
-        self.data = data
-        self.response_name = name
-        self.description = description
-        super(CustomException, self).__init__(code)
-
-    @property
-    def name(self):
-        """The status name."""
-        if self.response_name:
-            return self.response_name
-        return HTTP_STATUS_CODES.get(self.code, 'Unknown Error')
-
-    def get_response(self, environ=None):
-        """
-        Update HTTPException response processing
-        :param environment:
-        :return:
-        """
-        resp = super(CustomException, self).get_response(environ)
-        resp.status = "%s %s" % (self.code, self.name.upper())
-        return resp
 
 
 class BaseResource(Resource):
@@ -89,6 +62,17 @@ class BaseResource(Resource):
 
         return _errors
 
+    def prepare_data(self):
+        """
+        prepares form data
+        :return:
+        """
+        data = request.form.copy()
+        if is_json(request.data):
+            data.update(json.loads(request.data))
+
+        return data
+
     def get(self):
         """
         GET request method
@@ -101,7 +85,7 @@ class BaseResource(Resource):
         """
         abort(405)
 
-    def post(self):
+    def post(self, obj_id=None):
         """
         POST request method
         To be re-initialized by child class
@@ -112,6 +96,13 @@ class BaseResource(Resource):
         :return:
         """
         abort(405)
+
+    @auth.login_required
+    def put(self, obj_id):
+        if not obj_id:
+            abort(405, message="obj_id missing from request")
+
+        return self.post(obj_id)
 
     def delete(self, obj_id):
         """
@@ -171,7 +162,8 @@ class LoginResource(BaseResource):
           200:
         """
 
-        form = LoginForm(request.form, csrf_enabled=False)
+        data = self.prepare_data()
+        form = LoginForm(data, csrf_enabled=False)
 
         if form.validate():
             user = User.query(User.username == form.username.data).get()
@@ -250,7 +242,7 @@ class UserResource(BaseResource):
         'phone_number': fields.String
     }
 
-    @admin_auth.login_required
+    @auth.login_required
     def get(self, obj_id=None):
         if not obj_id:
             query = User.query().fetch()
@@ -275,10 +267,11 @@ class UserResource(BaseResource):
         except Exception:
             abort(404, message="User with key ({}) not found".format(obj_id))
 
-    @admin_auth.login_required
+    @auth.login_required
     def post(self, obj_id=None):
+        data = self.prepare_data()
         if obj_id:
-            form = UpdateForm(request.form, csrf_enabled=False)
+            form = UpdateForm(data, csrf_enabled=False)
             if form.validate():
                 user = User.get_by_id(int(obj_id))
                 if not user:
@@ -286,21 +279,22 @@ class UserResource(BaseResource):
 
                 user.first_name = form.first_name.data if form.first_name.data else user.first_name
                 user.last_name = form.last_name.data if form.last_name.data else user.last_name
-                user.phone_number = form.phone_number.data if form.phone_number.data else user.phone_number
+                user.phone_number = int(form.phone_number.data) if form.phone_number.data else user.phone_number
                 user.address = form.address.data if form.address.data else user.address
+                user.put()
 
                 output = self.output_fields
                 output.update(self.resource_fields)
                 return marshal(user, output), 200
 
         else:
-            form = RegistrationForm(request.form, csrf_enabled=False)
+            form = RegistrationForm(data, csrf_enabled=False)
             if form.validate():
                 user = User(username=form.username.data, password=hashlib.md5(form.password.data).hexdigest(),
                             first_name=form.first_name.data, last_name=form.last_name.data,
-                            phone_number=form.phone_number.data, address=form.address.data)
-                user_key = user.put()
-                user.id = str(user_key.id())
+                            phone_number=int(form.phone_number.data), address=form.address.data)
+                user.put()
+                user.id = str(user.key.id())
                 user.put()
                 output = self.output_fields
                 output.update(self.resource_fields)
@@ -309,7 +303,7 @@ class UserResource(BaseResource):
         error_data = self.prepare_errors(form.errors)
         raise CustomException(code=400, name='Validation Failed', data=error_data)
 
-    @admin_auth.login_required
+    @auth.login_required
     def delete(self, obj_id):
         """
         DELETE user account
@@ -321,8 +315,9 @@ class UserResource(BaseResource):
             user.key.delete()
             return {"status": "successfully deleted"}, 204
         except Exception:
-            raise CustomException(code=400, name='Validation Failed', data={"description": 'DELETE failed for User with '
-                                                                                           'key {}'.format(obj_id)})
+            raise CustomException(code=400, name='Validation Failed',
+                                  data={"description": 'DELETE failed for User with '
+                                                       'key {}'.format(obj_id)})
 
 
 class CustomerResource(BaseResource):
@@ -385,7 +380,8 @@ class CustomerResource(BaseResource):
             output.update(self.resource_fields)
 
             resp = {
-                'results': marshal(query, output)
+                'results': marshal(query, output),
+                'count': len(query)
             }
 
             return resp, 200
@@ -405,8 +401,9 @@ class CustomerResource(BaseResource):
     @auth.login_required
     def post(self, obj_id=None):
 
+        data = self.prepare_data()
         if obj_id:
-            form = UpdateForm(request.form, csrf_enabled=False)
+            form = UpdateForm(data, csrf_enabled=False)
             if form.validate():
                 customer = Customer.get_by_id(int(obj_id))
                 if not customer:
@@ -416,17 +413,22 @@ class CustomerResource(BaseResource):
                 customer.last_name = form.last_name.data if form.last_name.data else customer.last_name
                 customer.phone_number = form.phone_number.data if form.phone_number.data else customer.phone_number
                 customer.address = form.address.data if form.address.data else customer.address
+                customer.put()
 
                 output = self.output_fields
                 output.update(self.resource_fields)
                 return marshal(customer, output), 200
+            else:
+                error_data = self.prepare_errors(form.errors)
+                raise CustomException(code=400, name='Validation Failed', data=error_data)
         else:
-            form = CustomerForm(request.form, csrf_enabled=False)
+            form = CustomerForm(data, csrf_enabled=False)
 
             if form.validate():
-
-                customer = User(first_name=form.first_name.data, last_name=form.last_name.data,
+                customer = Customer(first_name=form.first_name.data, last_name=form.last_name.data,
                                 phone_number=form.phone_number.data, address=form.address.data)
+                customer.put()
+                customer.id = str(customer.key.id())
                 customer.put()
                 output = self.output_fields
                 output.update(self.resource_fields)
@@ -445,7 +447,7 @@ class CustomerResource(BaseResource):
         try:
             customer = Customer.get_by_id(int(obj_id))
             customer.key.delete()
-            return {"status": "Customer with id - {} successfully deleted" % obj_id}, 204
+            return True, 204
         except Exception:
             raise CustomException(code=400, name='Validation Failed',
                                   data={"description": 'DELETE failed for Customer with '
@@ -501,7 +503,8 @@ class RoomResource(BaseResource):
             output.update(self.resource_fields)
 
             resp = {
-                'results': marshal(query, output)
+                'results': marshal(query, output),
+                'count': len(query)
             }
 
             return resp, 200
@@ -520,21 +523,24 @@ class RoomResource(BaseResource):
 
     @auth.login_required
     def post(self, obj_id=None):
-        form = RoomForm(request.form, csrf_enabled=False)
+        data = self.prepare_data()
+        form = RoomForm(data, csrf_enabled=False)
         if form.validate():
             if obj_id:
                 room = Room.get_by_id(int(obj_id))
                 if not room:
                     abort(404, message="Room with key ({}) not found".format(obj_id))
 
-                room.number = form.number.data if form.number.data else room.number
                 room.is_booked = form.is_booked.data if form.is_booked.data else room.is_booked
+                room.put()
 
                 output = self.output_fields
                 output.update(self.resource_fields)
                 return marshal(room, output), 200
 
             room = Room(number=form.number.data, is_booked=form.is_booked.data)
+            room.put()
+            room.id = str(room.key.id())
             room.put()
             output = self.output_fields
             output.update(self.resource_fields)
@@ -553,11 +559,11 @@ class RoomResource(BaseResource):
         try:
             room = Room.get_by_id(int(obj_id))
             room.key.delete()
-            return {"status": "Room with id - {} successfully deleted" % obj_id}, 204
+            return True, 204
         except Exception:
             raise CustomException(code=400, name='Validation Failed',
-                                  data={"description": 'DELETE failed for Room with '
-                                                       'key {}'.format(obj_id)})
+                                  data={"message": 'DELETE failed for Room with '
+                                                   'key {}'.format(obj_id)})
 
 
 class BookingResource(BaseResource):
@@ -619,7 +625,8 @@ class BookingResource(BaseResource):
             output.update(self.resource_fields)
 
             resp = {
-                'results': marshal(query, output)
+                'results': marshal(query, output),
+                'count': len(query)
             }
 
             return resp, 200
@@ -643,29 +650,47 @@ class BookingResource(BaseResource):
         :param obj_id:
         :return:
         """
-        form = BookingForm(request.form, csrf_enabled=False)
-        if form.validate():
-            if obj_id:
+        data = self.prepare_data()
+        if obj_id:
+            form = UpdateBookingForm(data, csrf_enabled=False)
+            if form.validate():
                 booking = Booking.get_by_id(int(obj_id))
                 if not booking:
                     abort(404, message="Booking with key ({}) not found".format(obj_id))
 
-                booking.room_number = form.room_number.data if form.room_number.data else booking.room_number
-                booking.customerID = form.customerID.data if form.customerID.data else booking.customerID
-                booking.is_active = form.is_active.data if form.is_active.data else booking.is_active
+                booking.is_active = form.is_active.data
+                booking.put()
+
+                room = Room.query(Room.number == booking.room_number).get()
+                room.is_booked = True if booking.is_active is True else False
+                room.put()
 
                 output = self.output_fields
                 output.update(self.resource_fields)
                 return marshal(booking, output), 200
 
-            booking = Booking(customerID=form.customerID.data, room_number=form.room_number.data)
-            booking.put()
-            output = self.output_fields
-            output.update(self.resource_fields)
-            return marshal(booking, output), 201
+            error_data = self.prepare_errors(form.errors)
+            raise CustomException(code=400, name='Validation Failed', data=error_data)
 
-        error_data = self.prepare_errors(form.errors)
-        raise CustomException(code=400, name='Validation Failed', data=error_data)
+        else:
+            form = BookingForm(data, csrf_enabled=False)
+            if form.validate():
+                booking = Booking(customerID=form.customerID.data, room_number=int(form.room_number.data),
+                                  is_active=True)
+                booking.put()
+                booking.id = str(booking.key.id())
+                booking.put()
+
+                room = Room.query(Room.number == booking.room_number).get()
+                room.is_booked = True if booking.is_active is True else False
+                room.put()
+
+                output = self.output_fields
+                output.update(self.resource_fields)
+                return marshal(booking, output), 201
+
+            error_data = self.prepare_errors(form.errors)
+            raise CustomException(code=400, name='Validation Failed', data=error_data)
 
     @auth.login_required
     def delete(self, obj_id):
@@ -682,7 +707,3 @@ class BookingResource(BaseResource):
             raise CustomException(code=400, name='Validation Failed',
                                   data={"description": 'DELETE failed for Booking with '
                                                        'key {}'.format(obj_id)})
-
-
-
-

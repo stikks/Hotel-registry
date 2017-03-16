@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Bookings | Signup</title>
+    <!-- Core CSS - Include with every page -->
+    <link href="/static/plugins/bootstrap/bootstrap.css" rel="stylesheet"/>
+    <link href="/static/font-awesome/css/font-awesome.css" rel="stylesheet"/>
+    <link href="/static/plugins/pace/pace-theme-big-counter.css" rel="stylesheet"/>
+    <link href="/static/css/style.css" rel="stylesheet"/>
+    <link href="/static/css/main-style.css" rel="stylesheet"/>
+
+</head>
+
+<body class="body-Login-back">
+
+<div class="container">
+
+    <div class="row">
+{#        <div class="col-md-4 col-md-offset-4 text-center logo-margin ">#}
+{#            <img src="/static/img/hotel.png" alt="" style="height: 160px; margin-bottom: -50px"/>#}
+{#        </div>#}
+        <div class="col-md-4 col-md-offset-4">
+            <div class="login-panel panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Please Sign Up</h3>
+                </div>
+                <div class="panel-body">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <ul class=flashes>
+                                {% for message in messages %}
+                                    <li style="color: red">{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                    <form role="form" method="post" action="{{ url_for('.register') }}">
+                        <fieldset>
+                            <div class="form-group">
+                                <label for="first_name">First Name</label>
+                                <input class="form-control" placeholder="First Name" name="first_name" type="text"
+                                       id="first_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="last_name">Last Name</label>
+                                <input class="form-control" placeholder="Last Name" name="last_name" type="text"
+                                       id="last_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="first_name">Address</label>
+                                <textarea class="form-control" placeholder="Address" name="address"
+                                          id="address"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="last_name">Phone Number</label>
+                                <input class="form-control" placeholder="Phone Number" name="phone_number" type="number"
+                                       id="phone_number">
+                            </div>
+                            <div class="form-group">
+                                <label for="last_name">Username</label>
+                                <input class="form-control" placeholder="Username" name="username" type="email"
+                                       id="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="last_name">Password</label>
+                                <input class="form-control" placeholder="Password" name="password" type="password"
+                                       id="password" required>
+                            </div>
+                            <p>Already have an account? <a href="{{ url_for('.login') }}">Login</a></p>
+                            <!-- Change this to a button or input when using this as a form -->
+                            <button type="submit" class="btn btn-lg btn-success btn-block">Register</button>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Core Scripts - Include with every page -->
+<script src="/static/plugins/jquery-1.10.2.js"></script>
+<script src="/static/plugins/bootstrap/bootstrap.min.js"></script>
+<script src="/static/plugins/metisMenu/jquery.metisMenu.js"></script>
+
+</body>
+
+</html>

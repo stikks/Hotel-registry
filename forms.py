@@ -3,7 +3,7 @@ from wtforms import SelectField, PasswordField, StringField, FloatField, Boolean
 from wtforms.validators import DataRequired, Optional, Email, InputRequired
 from wtforms.fields.html5 import EmailField
 
-from models import User, Customer
+from models import User, Customer, Room
 
 
 class LoginForm(Form):
@@ -62,12 +62,35 @@ class RegistrationForm(Form):
 
 class BookingForm(Form):
     """
-    Booking form to create new users
+    Booking form to create new booking
     """
-    # address information
     customerID = StringField("CustomerID", validators=[DataRequired()])
-    room_number = StringField("Room", validators=[DataRequired()])
+    room_number = IntegerField("Room", validators=[DataRequired()])
     is_active = BooleanField("Is Active", default=True)
+
+    def validate(self):
+        """
+        raises a Validation Error if a room with form request data 'number' already exists
+        :return:
+        """
+        val = Form.validate(self)
+        if not val:
+            return False
+
+        room = Room.query(Room.number == self.room_number.data).get()
+        if room.is_booked:
+            self.room_number.errors.append('Room with number - {} already booked'.format(self.room_number.data))
+            return False
+        self.room = room
+
+        return True
+
+
+class UpdateBookingForm(Form):
+    """
+    Booking form to update booking
+    """
+    is_active = BooleanField("Is Active", default=False)
 
 
 class RoomForm(Form):
@@ -77,6 +100,23 @@ class RoomForm(Form):
     # address information
     number = IntegerField("Room Number", validators=[DataRequired()])
     is_booked = BooleanField("Is Booked", default=True)
+
+    def validate(self):
+        """
+        raises a Validation Error if a room with form request data 'number' already exists
+        :return:
+        """
+        val = Form.validate(self)
+        if not val:
+            return False
+
+        room = Room.query(Room.number == self.number.data).get()
+        if room:
+            self.number.errors.append('Room with number - {} already exists'.format(self.number.data))
+            return False
+        self.room = room
+
+        return True
 
 
 class CustomerForm(Form):

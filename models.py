@@ -31,7 +31,7 @@ class User(ndb.Model):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     address = ndb.TextProperty()
-    phone_number = ndb.StringProperty()
+    phone_number = ndb.IntegerProperty()
     is_admin = ndb.BooleanProperty()
 
     # date stamp
@@ -52,7 +52,7 @@ class Room(ndb.Model):
     room to be booked
     """
     id = ndb.TextProperty(indexed=True)
-    number = ndb.StringProperty()
+    number = ndb.IntegerProperty()
     is_booked = ndb.BooleanProperty()
 
     # date stamp
@@ -68,7 +68,7 @@ class Customer(ndb.Model):
     first_name = ndb.StringProperty()
     last_name = ndb.StringProperty()
     address = ndb.TextProperty()
-    phone_number = ndb.StringProperty()
+    phone_number = ndb.IntegerProperty()
 
     # date stamp
     date_created = ndb.DateProperty(auto_now_add=True)
@@ -81,7 +81,7 @@ class Booking(ndb.Model):
     """
     id = ndb.TextProperty(indexed=True)
     customerID = ndb.StringProperty()
-    room_number = ndb.StringProperty()
+    room_number = ndb.IntegerProperty()
     is_active = ndb.BooleanProperty()
 
     # date stamp

@@ -1,6 +1,7 @@
 import logging, json
 from datetime import date
 import hashlib
+from itertools import chain
 
 from flask import Flask, render_template, request, redirect, g, flash, jsonify, url_for, session
 from flask_restful import Api
@@ -9,7 +10,7 @@ from google.appengine.ext import ndb
 
 from settings import Config
 from models import Booking, Customer, Room, User
-from forms import LoginForm
+from forms import LoginForm, RegistrationForm
 from services import login_required
 
 from resources import LoginResource, UserResource, BookingResource, CustomerResource, RoomResource
@@ -70,6 +71,22 @@ def login():
         else:
             flash('Invalid User/password combination')
     return render_template('login.html', **locals())
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm(request.form, csrf_enabled=False)
+
+    if request.method == 'POST':
+        if form.validate():
+            user = User(username=form.username.data, password=hashlib.md5(form.password.data).hexdigest(),
+                        first_name=form.first_name.data, last_name=form.last_name.data,
+                        phone_number=form.phone_number.data, address=form.address.data)
+            user.put()
+            return redirect(url_for('login'))
+        else:
+            flash(form.errors)
+    return render_template('signup.html', **locals())
 
 
 @app.route('/logout')

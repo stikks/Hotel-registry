@@ -1,0 +1,50 @@
+<ui-view>
+    <div class="row">
+        <!--  page header -->
+        <div class="col-lg-12">
+            <h1 class="page-header">Rooms</h1>
+        </div>
+        <!-- end  page header -->
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Advanced Tables -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    List of Rooms
+                    <div class="pull-right"><a ui-sref="create_room" class="btn btn-xs btn-primary">Add New Room</a></div>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered table-hover" id="dataTables-example">
+                            <thead>
+                            <tr ng-show="data.room_count">
+                                <th>ID</th>
+                                <th>Room Number</th>
+                                <th>Booked</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr class="odd gradeX" ng-repeat="room in data.rooms">
+                                <td ng-bind="room.id">{{ room }}</td>
+                                <td ng-bind="room.number"></td>
+                                <td class="center" ng-bind="room.is_booked ? 'BOOKED': 'AVAILABLE'"></td>
+                                <td>
+                                    <button class="btn btn-xs btn-danger" ng-click="delete(room.id)">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <p class="text-center">{{ data.room_count }} rooms currently available</p>
+                                <p ng-bind="data.error" style="color:red"></p>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+            <!--End Advanced Tables -->
+        </div>
+    </div>
+</ui-view>
