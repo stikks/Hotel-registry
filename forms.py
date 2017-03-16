@@ -39,7 +39,7 @@ class RegistrationForm(Form):
     # address information
     first_name = StringField("First Name", validators=[DataRequired()])
     last_name = StringField("Last Name", validators=[Optional()])
-    phone_number = StringField("Phone Number", validators=[Optional()])
+    phone_number = IntegerField("Phone Number", validators=[Optional()])
     address = StringField("Address", validators=[Optional()])
 
     # authentication information
@@ -95,7 +95,7 @@ class UpdateBookingForm(Form):
 
 class RoomForm(Form):
     """
-    Registration form to create new users
+    Room form to create new rooms
     """
     # address information
     number = IntegerField("Room Number", validators=[DataRequired()])
