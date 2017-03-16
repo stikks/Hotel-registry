@@ -85,7 +85,7 @@ class BaseResource(Resource):
         """
         abort(405)
 
-    def post(self, obj_id=None):
+    def post(self):
         """
         POST request method
         To be re-initialized by child class
@@ -122,7 +122,10 @@ class LoginResource(BaseResource):
     Login api resource
     """
     resource_fields = {
-        'userID': fields.String,
+        'first_name': fields.String,
+        'last_name': fields.String,
+        'address': fields.String,
+        'phone_number': fields.String,
         'username': fields.String
     }
 
@@ -180,6 +183,28 @@ class LoginResource(BaseResource):
         error_data = self.prepare_errors(form.errors)
         raise CustomException(code=400, description="The provided user credentials are invalid.",
                               name='Validation Failed', data=error_data)
+
+    def put(self):
+        """
+        PUT request method
+        ---
+        responses:
+          405:
+            description: Method not Allowed
+        :return:
+        """
+        abort(405)
+
+    def delete(self):
+        """
+        DELETE request method
+        ---
+        responses:
+          405:
+            description: Method not Allowed
+        :return:
+        """
+        abort(405)
 
 
 class UserResource(BaseResource):
@@ -282,7 +307,6 @@ class UserResource(BaseResource):
                 user.phone_number = int(form.phone_number.data) if form.phone_number.data else user.phone_number
                 user.address = form.address.data if form.address.data else user.address
                 user.put()
-
                 output = self.output_fields
                 output.update(self.resource_fields)
                 return marshal(user, output), 200
