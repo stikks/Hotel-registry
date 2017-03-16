@@ -48,10 +48,8 @@ def server_error(e):
 def load_user():
     if session.get("user_id"):
         user = User.get_by_id(session["user_id"])
-    else:
-        user = None  # Make it better, use an anonymous User instead
+        g.user = user
 
-    g.user = user
 
 
 @app.route('/', methods=['GET'])
