@@ -1,22 +1,26 @@
-import logging
+import logging, json
 from datetime import date
 import hashlib
 
-from flask import Flask, render_template, request, redirect, g, flash, jsonify
+from flask import Flask, render_template, request, redirect, g, flash, jsonify, url_for, session
 from flask_restful import Api
 from flask_swagger import swagger
 from google.appengine.ext import ndb
 
 from settings import Config
-from models import Address, Booking, Customer, Room, User
+from models import Booking, Customer, Room, User
 from forms import LoginForm
 from services import login_required
 
-from resources import LoginResource
+from resources import LoginResource, UserResource, BookingResource, CustomerResource, RoomResource
 
 app = Flask('hotels')
 app.config.from_object(Config)
 app.api = Api(app, prefix='/v1')
+
+swag = swagger(app)
+swag['info']['version'] = "1.0"
+swag['info']['title'] = "Hotel Bookings API"
 
 
 @app.context_processor
@@ -39,6 +43,16 @@ def server_error(e):
     return 'An internal error occurred.', 500
 
 
+@app.before_request
+def load_user():
+    if session.get("user_id"):
+        user = User.get_by_id(session["user_id"])
+    else:
+        user = None  # Make it better, use an anonymous User instead
+
+    g.user = user
+
+
 @app.route('/', methods=['GET'])
 @login_required
 def index():
@@ -51,8 +65,8 @@ def login():
     if request.method == 'POST':
         user = User.query(User.username == form.username.data).get()
         if user and user.check_password(form.password.data):
-            g.user = user
-            return redirect('index')
+            session['user_id'] = user.key.id()
+            return redirect(url_for('index'))
         else:
             flash('Invalid User/password combination')
     return render_template('login.html', **locals())
@@ -61,13 +75,18 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    del session['user_id']
     g.user = None
-    return redirect('index')
+    return redirect(url_for('index'))
 
 
 @app.route("/spec")
 def spec():
-    return jsonify(swagger(app, from_file_keyword='swagger_from_file'))
+    return jsonify(swag)
 
 
 app.api.add_resource(LoginResource, '/login')
+app.api.add_resource(UserResource, '/users', '/users/<string:obj_id>')
+app.api.add_resource(CustomerResource, '/customers', '/customers/<string:obj_id>')
+app.api.add_resource(BookingResource, '/bookings', '/bookings/<string:obj_id>')
+app.api.add_resource(RoomResource, '/rooms', '/rooms/<string:obj_id>')
