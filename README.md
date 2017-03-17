@@ -6,18 +6,26 @@ This is a simple Hotel Bookings management system built on Flask, Bootstrap and 
 
 ### Login screen
 ![hierapolis_login](https://s3.amazonaws.com/elasticbeanstalk-us-east-1-156304710937/login_screenshot.png)
-### Forgot password
+### Register screen
 ![hierapolis_register](https://s3.amazonaws.com/elasticbeanstalk-us-east-1-156304710937/register_screenshot.png)
-### Dashboard
+### Dashboard screen
 ![hierapolis_dashboard](https://s3.amazonaws.com/elasticbeanstalk-us-east-1-156304710937/dashboard.png)
-### Tables
+### Listings screen
 ![hierapolis_listings](https://s3.amazonaws.com/elasticbeanstalk-us-east-1-156304710937/listings.png)
-### Forms
+### Forms screen
 ![hierapolis_forms](https://s3.amazonaws.com/elasticbeanstalk-us-east-1-156304710937/form.png)
 
 ## Requirements
 
-TODO
+flask
+flask-restful
+flask-marshmallow
+flask-swagger
+flask-login
+flask-wtf
+flask-httpauth
+requests
+google-api-python-client
 
 ## Usage
 
