@@ -81,6 +81,8 @@ def register():
                         first_name=form.first_name.data, last_name=form.last_name.data,
                         phone_number=form.phone_number.data, address=form.address.data)
             user.put()
+            user.id = str(user.key.id())
+            user.put()
             return redirect(url_for('login'))
         else:
             flash(form.errors)
