@@ -10,11 +10,16 @@ from forms import LoginForm, RegistrationForm, BookingForm, RoomForm, CustomerFo
 from services import is_json, CustomException
 
 auth = HTTPBasicAuth()
-admin_auth = HTTPBasicAuth()
 
 
 @auth.verify_password
 def verify_password(username, password):
+    """
+    HTTP Basic authentication
+    :param username:
+    :param password:
+    :return:
+    """
     user = User.query(User.username == username).get()
 
     if not user or not user.check_password(password):
@@ -27,24 +32,13 @@ def verify_password(username, password):
     return True
 
 
-@admin_auth.verify_password
-def verify_admin(username, password):
-    user = User.query(User.username == username).get()
-
-    if not user or not user.check_password(password) or not user.is_admin:
-        return False
-    g.user = user
-    return True
-
-
 class BaseResource(Resource):
-    """
-    BaseResource class to implement common methods
-    """
-
     @property
     def output_fields(self):
-        """ Property function to always generate a clean base value for output fields """
+        """
+        default fields present in all model objects
+        :return:
+        """
         return {
             'id': fields.Integer,
             'date_created': fields.DateTime(dt_format='iso8601'),
@@ -53,7 +47,9 @@ class BaseResource(Resource):
 
     def prepare_errors(self, errors):
         """
-        Helper class to prepare errors for response
+        prepares errors for response
+        :param errors:
+        :return:
         """
         _errors = {}
         for k, v in errors.items():
@@ -64,8 +60,8 @@ class BaseResource(Resource):
 
     def prepare_data(self):
         """
-        prepares form data
-        :return:
+        processes POST request data before form validation
+        :return: form data
         """
         data = request.form.copy()
         if is_json(request.data):
@@ -99,6 +95,15 @@ class BaseResource(Resource):
 
     @auth.login_required
     def put(self, obj_id):
+        """
+        PUT request method
+        To be re-initialized by child class
+        ---
+        responses:
+          405:
+            description: Method not Allowed when obj_id is missing
+        :return:
+        """
         if not obj_id:
             abort(405, message="obj_id missing from request")
 
@@ -118,9 +123,6 @@ class BaseResource(Resource):
 
 
 class LoginResource(BaseResource):
-    """
-    Login api resource
-    """
     resource_fields = {
         'first_name': fields.String,
         'last_name': fields.String,
@@ -131,17 +133,10 @@ class LoginResource(BaseResource):
 
     def post(self):
         """
-        login a user
+        Login an existing user
         ---
         tags:
-          - users
-        definitions:
-          - schema:
-              id: User
-              properties:
-                name:
-                type: string
-                description: Authentication
+          - login
         parameters:
           - in: body
             name: body
@@ -155,16 +150,12 @@ class LoginResource(BaseResource):
                   type: string
                   description: username for user
                 password:
+                  type: string
                   description: password for user
-                users:
-                  type: array
-                  description: list of users
-                  items:
-                    $ref: "#/definitions/User"
         responses:
-          200:
+          201:
+            description: User logged in
         """
-
         data = self.prepare_data()
         form = LoginForm(data, csrf_enabled=False)
 
@@ -186,78 +177,20 @@ class LoginResource(BaseResource):
 
     def put(self):
         """
-        PUT request method
-        ---
-        responses:
-          405:
-            description: Method not Allowed
+        Not available for this resource
         :return:
         """
         abort(405)
 
     def delete(self):
         """
-        DELETE request method
-        ---
-        responses:
-          405:
-            description: Method not Allowed
+        Not available for this resource
         :return:
         """
         abort(405)
 
 
 class UserResource(BaseResource):
-    """
-    Create a new user
-    ---
-    tags:
-      - users
-    definitions:
-      - schema:
-          id: User
-          properties:
-            name:
-             type: string
-             description: Create User
-    parameters:
-      - in: body
-        name: body
-        schema:
-          id: User
-          required:
-            - username
-            - password
-            - first_name
-            - last_name
-          optional:
-            - address
-            - phone_number
-          properties:
-            username:
-              type: string
-              description: username for user
-            password:
-              description: password for user
-            first_name:
-              type: string
-              description: first name for user
-            last_name:
-              type: string
-              description: last name for user
-            address:
-              description: address for user
-            phone number:
-              description: phone number for user
-            users:
-              type: array
-              description: list of users
-              items:
-                $ref: "#/definitions/User"
-    responses:
-      201:
-        description: User created
-    """
 
     resource_fields = {
         'username': fields.String,
@@ -269,6 +202,46 @@ class UserResource(BaseResource):
 
     @auth.login_required
     def get(self, obj_id=None):
+        """
+        Gets user(s).
+        Returns all users if no obj_id is passed
+        ---
+        tags:
+          - users
+        parameters:
+          - in: path
+            name: obj_id
+        definitions:
+          - schema:
+              id: User
+              required:
+                - first_name
+                - username
+              optional:
+                - last_name
+                - address
+                - phone_number
+              properties:
+                first_name:
+                  type: string
+                  description: the user's first name
+                last_name:
+                  type: string
+                  description: the user's last name
+                address:
+                  type: string
+                  description: the user's address
+                phone_number:
+                  type: string
+                  description: the user's phone number
+                username:
+                  type: string
+                  description: the user's username
+        responses:
+          200:
+            description: Returns the specified user or a list of users
+            $ref: '#/definitions/User'
+        """
         if not obj_id:
             query = User.query().fetch()
             output = self.output_fields
@@ -294,6 +267,50 @@ class UserResource(BaseResource):
 
     @auth.login_required
     def post(self, obj_id=None):
+        """
+        Post user(s)
+        Create a new user/ Update a user
+        ---
+        tags:
+          - users
+        parameters:
+          - in: path
+            name: obj_id
+          - in: body
+            name: body
+            schema:
+              id: User
+              required:
+                - username
+                - password
+                - first_name
+              optional:
+                - last_name
+                - address
+                - phone_number
+              properties:
+                username:
+                  type: string
+                  description: username for user
+                first_name:
+                  type: string
+                  description: first name for user
+                last_name:
+                  type: string
+                  description: last name for user
+                address:
+                  type: string
+                  description: address for user
+                phone_number:
+                  type: string
+                  description: phone number for user
+                password:
+                  type: string
+                  description: password for user
+        responses:
+          201:
+            description: User created
+        """
         data = self.prepare_data()
         if obj_id:
             form = UpdateForm(data, csrf_enabled=False)
@@ -330,9 +347,19 @@ class UserResource(BaseResource):
     @auth.login_required
     def delete(self, obj_id):
         """
-        DELETE user account
-        :param obj_id: user key id
-        :return:
+        DELETE user
+        Delete a user
+        ---
+        tags:
+          - users
+        parameters:
+          - in: path
+            name: obj_id
+            schema:
+              id: User
+        responses:
+          204:
+            description: User deleted
         """
         try:
             user = User.get_by_id(int(obj_id))
@@ -345,49 +372,6 @@ class UserResource(BaseResource):
 
 
 class CustomerResource(BaseResource):
-    """
-    Create a new customer
-    ---
-    tags:
-      - customers
-    definitions:
-      - schema:
-          id: Customer
-          properties:
-            name:
-             type: string
-             description: Create Customer
-    parameters:
-      - in: body
-        name: body
-        schema:
-          id: Customer
-          required:
-            - first_name
-            - last_name
-          optional:
-            - address
-            - phone_number
-          properties:
-            first_name:
-              type: string
-              description: first name for user
-            last_name:
-              type: string
-              description: last name for user
-            address:
-              description: address for user
-            phone number:
-              description: phone number for user
-            customers:
-              type: array
-              description: list of customers
-              items:
-                $ref: "#/definitions/Customer"
-    responses:
-      201:
-        description: Customer created
-    """
 
     resource_fields = {
         'first_name': fields.String,
@@ -398,6 +382,42 @@ class CustomerResource(BaseResource):
 
     @auth.login_required
     def get(self, obj_id=None):
+        """
+        Gets customer(s).
+        Returns all customers if no obj_id is passed
+        ---
+        tags:
+          - customers
+        parameters:
+          - in: path
+            name: obj_id
+        definitions:
+          - schema:
+              id: Customer
+              required:
+                - first_name
+                - last_name
+              optional:
+                - address
+                - phone_number
+              properties:
+                first_name:
+                  type: string
+                  description: the customer's first name
+                last_name:
+                  type: string
+                  description: the customer's last name
+                address:
+                  type: string
+                  description: the customer's address
+                phone_number:
+                  type: string
+                  description: the customer's phone number
+        responses:
+          200:
+            description: Returns the specified customer or a list of customers
+            $ref: '#/definitions/Customer'
+        """
         if not obj_id:
             query = Customer.query().fetch()
             output = self.output_fields
@@ -424,7 +444,42 @@ class CustomerResource(BaseResource):
 
     @auth.login_required
     def post(self, obj_id=None):
-
+        """
+       Post customer(s)
+       Create a new customer/ Update a customer
+       ---
+       tags:
+         - customers
+       parameters:
+         - in: path
+           name: obj_id
+         - in: body
+           name: body
+           schema:
+             id: Customer
+             required:
+               - first_name
+               - last_name
+             optional:
+               - address
+               - phone_number
+             properties:
+               first_name:
+                 type: string
+                 description: first name for customer
+               last_name:
+                 type: string
+                 description: last name for customer
+               address:
+                 type: string
+                 description: address for customer
+               phone_number:
+                 type: string
+                 description: phone number for customer
+       responses:
+         201:
+           description: Customer created
+       """
         data = self.prepare_data()
         if obj_id:
             form = UpdateForm(data, csrf_enabled=False)
@@ -464,9 +519,19 @@ class CustomerResource(BaseResource):
     @auth.login_required
     def delete(self, obj_id):
         """
-        DELETE customer
-        :param obj_id: customer id
-        :return:
+        DELETE Customer
+        Delete a customer
+        ---
+        tags:
+          - users
+        parameters:
+          - in: path
+            name: obj_id
+            schema:
+              id: Customer
+        responses:
+          204:
+            description: Customer deleted
         """
         try:
             customer = Customer.get_by_id(int(obj_id))
@@ -479,41 +544,6 @@ class CustomerResource(BaseResource):
 
 
 class RoomResource(BaseResource):
-    """
-    Create a new room
-    ---
-    tags:
-      - rooms
-    definitions:
-      - schema:
-          id: Room
-          properties:
-            name:
-             type: string
-             description: Create Room
-    parameters:
-      - in: body
-        name: body
-        schema:
-          id: Room
-          required:
-            - number
-          optional:
-            - is_booked
-          properties:
-            number:
-              type: integer
-              description: room number
-            rooms:
-              type: array
-              description: list of rooms
-              items:
-                $ref: "#/definitions/Room"
-    responses:
-      201:
-        description: Room created
-    """
-
     resource_fields = {
         'number': fields.String,
         'is_booked': fields.Boolean
@@ -521,6 +551,31 @@ class RoomResource(BaseResource):
 
     @auth.login_required
     def get(self, obj_id=None):
+        """
+        Gets room(s).
+        Returns all rooms if no obj_id is passed
+        ---
+        tags:
+          - rooms
+        parameters:
+          - in: path
+            name: obj_id
+        definitions:
+          - schema:
+              id: Room
+              required:
+                - number
+              optional:
+                - is_booked
+              properties:
+                number:
+                  type: string
+                  description: the room's number
+        responses:
+          200:
+            description: Returns the specified room or a list of rooms
+            $ref: '#/definitions/Room'
+        """
         if not obj_id:
             query = Room.query().fetch()
             output = self.output_fields
@@ -547,6 +602,29 @@ class RoomResource(BaseResource):
 
     @auth.login_required
     def post(self, obj_id=None):
+        """
+       Post room(s)
+       Create a new room/ Update a room
+       ---
+       tags:
+         - rooms
+       parameters:
+         - in: path
+           name: obj_id
+         - in: body
+           name: body
+           schema:
+             id: Room
+             required:
+               - number
+             properties:
+               number:
+                 type: integer
+                 description: room number
+       responses:
+         201:
+           description: Room created
+       """
         data = self.prepare_data()
         form = RoomForm(data, csrf_enabled=False)
         if form.validate():
@@ -576,9 +654,19 @@ class RoomResource(BaseResource):
     @auth.login_required
     def delete(self, obj_id):
         """
-        DELETE booking
-        :param obj_id: booking id
-        :return:
+        DELETE room
+        Delete a room
+        ---
+        tags:
+          - rooms
+        parameters:
+          - in: path
+            name: obj_id
+            schema:
+              id: Room
+        responses:
+          204:
+            description: Room deleted
         """
         try:
             room = Room.get_by_id(int(obj_id))
@@ -591,44 +679,6 @@ class RoomResource(BaseResource):
 
 
 class BookingResource(BaseResource):
-    """
-    Create a new booking
-    ---
-    tags:
-      - bookings
-    definitions:
-      - schema:
-          id: Booking
-          properties:
-            name:
-             type: string
-             description: Create Booking
-    parameters:
-      - in: body
-        name: body
-        schema:
-          id: Booking
-          required:
-            - customerID
-            - room_number
-          optional:
-            - is_active
-          properties:
-            customerID:
-              type: string
-              description: id of customer
-            room_number:
-              type: integer
-              description: room number to be booked
-            bookings:
-              type: array
-              description: list of bookings
-              items:
-                $ref: "#/definitions/Booking"
-    responses:
-      201:
-        description: Booking created
-    """
 
     resource_fields = {
         'customerID': fields.String,
@@ -639,9 +689,36 @@ class BookingResource(BaseResource):
     @auth.login_required
     def get(self, obj_id=None):
         """
-        RETRIEVE OBJECT(S)
-        :param obj_id:
-        :return:
+        Gets booking(s).
+        Returns all bookings if no obj_id is passed
+        ---
+        tags:
+          - bookings
+        parameters:
+          - in: path
+            name: obj_id
+        definitions:
+          - schema:
+              id: Booking
+              required:
+                - customerID
+                - room_number
+              optional:
+                - is_active
+              properties:
+                customerID:
+                  type: string
+                  description: the customer's id
+                room_number:
+                  type: integer
+                  description: the room's number
+                is_booked:
+                  type: boolean
+                  description: the room's booking status
+        responses:
+          200:
+            description: Returns the specified booking or a list of bookings
+            $ref: '#/definitions/Booking'
         """
         if not obj_id:
             query = Booking.query().fetch()
@@ -670,10 +747,36 @@ class BookingResource(BaseResource):
     @auth.login_required
     def post(self, obj_id=None):
         """
-        CREATE/UPDATE booking object
-        :param obj_id:
-        :return:
-        """
+       Create a new booking/ Update a booking
+       ---
+       tags:
+         - bookings
+       parameters:
+         - in: path
+           name: obj_id
+         - in: body
+           name: body
+           schema:
+             id: Booking
+             required:
+               - room_number
+               - customerID
+             optional:
+               - is_active
+             properties:
+               customerID:
+                 type: string
+                 description: customer id
+               room_number:
+                 type: integer
+                 description: room number
+               is_active:
+                 type: boolean
+                 description: room booked
+       responses:
+         201:
+           description: Booking created
+       """
         data = self.prepare_data()
         if obj_id:
             form = UpdateBookingForm(data, csrf_enabled=False)
@@ -720,8 +823,18 @@ class BookingResource(BaseResource):
     def delete(self, obj_id):
         """
         DELETE booking
-        :param obj_id: booking id
-        :return:
+        Delete a booking
+        ---
+        tags:
+          - bookings
+        parameters:
+          - in: path
+            name: obj_id
+            schema:
+              id: Booking
+        responses:
+          204:
+            description: Booking deleted
         """
         try:
             booking = Booking.get_by_id(int(obj_id))

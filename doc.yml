@@ -1,0 +1,754 @@
+{
+  "definitions": {
+    "Booking": {
+      "optional": [
+        "is_active"
+      ],
+      "properties": {
+        "customerID": {
+          "description": "customer id",
+          "type": "string"
+        },
+        "is_active": {
+          "description": "room booked",
+          "type": "boolean"
+        },
+        "room_number": {
+          "description": "room number",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "room_number",
+        "customerID"
+      ]
+    },
+    "Customer": {
+      "optional": [
+        "address",
+        "phone_number"
+      ],
+      "properties": {
+        "address": {
+          "description": "address for customer",
+          "type": "string"
+        },
+        "first_name": {
+          "description": "first name for customer",
+          "type": "string"
+        },
+        "last_name": {
+          "description": "last name for customer",
+          "type": "string"
+        },
+        "phone_number": {
+          "description": "phone number for customer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "first_name",
+        "last_name"
+      ]
+    },
+    "Room": {
+      "optional": [
+        "is_booked"
+      ],
+      "properties": {
+        "number": {
+          "description": "room number",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "number"
+      ]
+    },
+    "User": {
+      "optional": [
+        "last_name",
+        "address",
+        "phone_number"
+      ],
+      "properties": {
+        "address": {
+          "description": "address for user",
+          "type": "string"
+        },
+        "first_name": {
+          "description": "first name for user",
+          "type": "string"
+        },
+        "last_name": {
+          "description": "last name for user",
+          "type": "string"
+        },
+        "password": {
+          "description": "password for user",
+          "type": "string"
+        },
+        "phone_number": {
+          "description": "phone number for user",
+          "type": "string"
+        },
+        "username": {
+          "description": "username for user",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password",
+        "first_name"
+      ]
+    }
+  },
+  "info": {
+    "title": "Hotel Bookings API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/v1/bookings": {
+      "delete": {
+        "description": "Delete a booking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/Booking"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Booking deleted"
+          }
+        },
+        "summary": "DELETE booking",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "get": {
+        "description": "Returns all bookings if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/Booking",
+            "description": "Returns the specified booking or a list of bookings"
+          }
+        },
+        "summary": "Gets booking(s).",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Booking"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Booking created"
+          }
+        },
+        "summary": "Create a new booking/ Update a booking",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/bookings/{obj_id}": {
+      "delete": {
+        "description": "Delete a booking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/Booking"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Booking deleted"
+          }
+        },
+        "summary": "DELETE booking",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "get": {
+        "description": "Returns all bookings if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/Booking",
+            "description": "Returns the specified booking or a list of bookings"
+          }
+        },
+        "summary": "Gets booking(s).",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Booking"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Booking created"
+          }
+        },
+        "summary": "Create a new booking/ Update a booking",
+        "tags": [
+          "bookings"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/customers": {
+      "delete": {
+        "description": "Delete a customer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/Customer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Customer deleted"
+          }
+        },
+        "summary": "DELETE Customer",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "description": "Returns all customers if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/Customer",
+            "description": "Returns the specified customer or a list of customers"
+          }
+        },
+        "summary": "Gets customer(s).",
+        "tags": [
+          "customers"
+        ]
+      },
+      "post": {
+        "description": "Create a new customer/ Update a customer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Customer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Customer created"
+          }
+        },
+        "summary": "Post customer(s)",
+        "tags": [
+          "customers"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/customers/{obj_id}": {
+      "delete": {
+        "description": "Delete a customer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/Customer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Customer deleted"
+          }
+        },
+        "summary": "DELETE Customer",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "description": "Returns all customers if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/Customer",
+            "description": "Returns the specified customer or a list of customers"
+          }
+        },
+        "summary": "Gets customer(s).",
+        "tags": [
+          "customers"
+        ]
+      },
+      "post": {
+        "description": "Create a new customer/ Update a customer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Customer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Customer created"
+          }
+        },
+        "summary": "Post customer(s)",
+        "tags": [
+          "customers"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/login": {
+      "get": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed"
+          }
+        },
+        "summary": "GET request method"
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User logged in"
+          }
+        },
+        "summary": "Login an existing user",
+        "tags": [
+          "login"
+        ]
+      }
+    },
+    "/v1/rooms": {
+      "delete": {
+        "description": "Delete a room",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/Room"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Room deleted"
+          }
+        },
+        "summary": "DELETE room",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "get": {
+        "description": "Returns all rooms if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/Room",
+            "description": "Returns the specified room or a list of rooms"
+          }
+        },
+        "summary": "Gets room(s).",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "post": {
+        "description": "Create a new room/ Update a room",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Room"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Room created"
+          }
+        },
+        "summary": "Post room(s)",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/rooms/{obj_id}": {
+      "delete": {
+        "description": "Delete a room",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/Room"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Room deleted"
+          }
+        },
+        "summary": "DELETE room",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "get": {
+        "description": "Returns all rooms if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/Room",
+            "description": "Returns the specified room or a list of rooms"
+          }
+        },
+        "summary": "Gets room(s).",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "post": {
+        "description": "Create a new room/ Update a room",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Room"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Room created"
+          }
+        },
+        "summary": "Post room(s)",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/users": {
+      "delete": {
+        "description": "Delete a user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          }
+        },
+        "summary": "DELETE user",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "description": "Returns all users if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/User",
+            "description": "Returns the specified user or a list of users"
+          }
+        },
+        "summary": "Gets user(s).",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "description": "Create a new user/ Update a user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        },
+        "summary": "Post user(s)",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    },
+    "/v1/users/{obj_id}": {
+      "delete": {
+        "description": "Delete a user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted"
+          }
+        },
+        "summary": "DELETE user",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "description": "Returns all users if no obj_id is passed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/definitions/User",
+            "description": "Returns the specified user or a list of users"
+          }
+        },
+        "summary": "Gets user(s).",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "description": "Create a new user/ Update a user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "obj_id"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User created"
+          }
+        },
+        "summary": "Post user(s)",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "To be re-initialized by child class",
+        "responses": {
+          "405": {
+            "description": "Method not Allowed when obj_id is missing"
+          }
+        },
+        "summary": "PUT request method"
+      }
+    }
+  },
+  "swagger": "2.0"
+}

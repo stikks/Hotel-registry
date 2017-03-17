@@ -19,9 +19,9 @@ app = Flask('hotels')
 app.config.from_object(Config)
 app.api = Api(app, prefix='/v1')
 
-swag = swagger(app)
-swag['info']['version'] = "1.0"
-swag['info']['title'] = "Hotel Bookings API"
+# swagger = swagger(app)
+# swag['info']['version'] = "1.0"
+# swag['info']['title'] = "Hotel Bookings API"
 
 
 @app.context_processor
@@ -49,7 +49,6 @@ def load_user():
     if session.get("user_id"):
         user = User.get_by_id(session["user_id"])
         g.user = user
-
 
 
 @app.route('/', methods=['GET'])
@@ -99,7 +98,12 @@ def logout():
 
 @app.route("/spec")
 def spec():
-    return jsonify(swag)
+    return jsonify(swagger(app, from_file_keyword='swagger_from_file', template={
+        "info": {
+            "version": "1.0",
+            "title": "Hotel Bookings API",
+        }
+    }))
 
 
 app.api.add_resource(LoginResource, '/login')
