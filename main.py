@@ -19,10 +19,6 @@ app = Flask('hotels')
 app.config.from_object(Config)
 app.api = Api(app, prefix='/v1')
 
-# swagger = swagger(app)
-# swag['info']['version'] = "1.0"
-# swag['info']['title'] = "Hotel Bookings API"
-
 
 @app.context_processor
 def context():
