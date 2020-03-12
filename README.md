@@ -16,7 +16,7 @@ This is a simple Hotel Bookings management system built on Flask, Bootstrap and 
 ![hierapolis_forms](https://s3.amazonaws.com/elasticbeanstalk-us-east-1-156304710937/form.png)
 
 ## Requirements
-
+```
 flask
 flask-restful
 flask-marshmallow
@@ -26,7 +26,7 @@ flask-wtf
 flask-httpauth
 requests
 google-api-python-client
-
+```
 ## Usage
 
 To setup the application;
